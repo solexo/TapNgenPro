@@ -1,0 +1,16 @@
+# Protection du fichier .env
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Protection contre l'accès direct aux fichiers JavaScript
+<FilesMatch "passwords\.js$">
+    Order allow,deny
+    Allow from localhost
+    Allow from 127.0.0.1
+    Deny from all
+</FilesMatch>
+
+# Interdire l'affichage du contenu des répertoires
+Options -Indexes 

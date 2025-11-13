@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapNgen - Business Card Generator</title>
+    <!-- Include passwords.js for password verification -->
+    <script src="passwords.js" defer></script>
+    <script src="template-editor.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00e7b5;
+            --secondary: #4b3621;
+            --editor-bg: #2d2d2d;
+            --editor-text: #f0f0f0;
+            --editor-panel: #3d3d3d;
+            --editor-highlight: #4a7bab;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--editor-bg);
+            color: var(--editor-text);
+            line-height: 1.6;
+        }
+        
+        /* Password Protection Layer */
+        .password-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--editor-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        
+        .password-box {
+            background-color: var(--editor-panel);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .password-box h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .password-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            color: var(--editor-text);
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .password-box button {
+            background-color: var(--primary);
+            color: #222;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .password-box button:hover {
+            background-color: #00c29e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .password-box button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .password-box .error-message {
+            color: #ff5252;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .logo-container {
+            margin-bottom: 30px;
+        }
+        
+        .logo-container img {
+            width: 120px;
+            height: auto;
+        }
+
+        .whatsapp-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .whatsapp-button:hover {
+            background-color: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .whatsapp-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .editor-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background-color: var(--editor-panel);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .sidebar-content {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .qr-generator-btn {
+            background-color: var(--primary);
+            color: #222;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .qr-generator-btn:hover {
+            background-color: #00c29e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .preview-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .preview-frame {
+            width: 100%;
+            height: calc(100vh - 70px);
+            border: 1px solid #555;
+            background-color: white;
+        }
+        
+        .editor-title {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        .accordion {
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        
+        .accordion-header {
+            padding: 12px 15px;
+            background-color: #2a2a2a;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .accordion-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .accordion-content {
+            padding: 15px;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            border-top: 1px solid #444;
+        }
+        
+        /* Scrollbar styling for accordion content */
+        .accordion-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .accordion-content::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+        
+        .accordion-content::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+            border-radius: 20px;
+        }
+        
+        .accordion.active .accordion-content {
+            display: block;
+        }
+        
+        .accordion-toggle {
+            transition: transform 0.3s;
+        }
+        
+        .accordion.active .accordion-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            color: var(--editor-text);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-group input[type="color"] {
+            height: 35px;
+            padding: 2px;
+        }
+        
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            background-color: var(--primary);
+            color: #222;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover {
+            background-color: #00c29e;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary {
+            background-color: #3d4852;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4a5d6e;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 15px;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px 10px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .color-preview {
+            display: flex;
+            margin-top: 15px;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .color-swatch {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+        
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+        
+        .service-item {
+            background-color: #343434;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .service-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .delete-btn {
+            background-color: #d12626;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .add-service-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .contact-item {
+            background-color: #343434;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .file-upload {
+            display: none;
+        }
+        
+        .upload-label {
+            display: block;
+            padding: 10px;
+            text-align: center;
+            background-color: #444;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .upload-label:hover {
+            background-color: #555;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            background-color: #4CAF50;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 9999;
+            transform: translateX(110%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+        }
+        
+        #logo-scale-value {
+            font-size: 0.9rem;
+            min-width: 40px;
+            text-align: right;
+        }
+        
+        .gradient-preview {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        #section-gradient-preview {
+            width: 100%;
+            height: 40px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: linear-gradient(135deg, #0a0a19, #1a1a2e);
+        }
+        
+        .gradient-preview-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .editor-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 1;
+                max-height: none;
+                overflow-y: visible;
+                padding-bottom: 100px;
+            }
+            
+            .sidebar-content {
+                overflow-y: visible;
+            }
+            
+            .sidebar-footer {
+                padding-top: 10px;
+            }
+            
+            .preview-container {
+                order: 2;
+                height: auto;
+                padding-bottom: 80px;
+                width: 100%;
+            }
+            
+            .preview-frame {
+                height: 80vh;
+                min-height: 600px;
+                border: none;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                border-radius: 8px;
+            }
+            
+            .action-buttons {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: var(--editor-panel);
+                padding: 15px;
+                margin-top: 0;
+                margin-bottom: 0;
+                z-index: 100;
+                box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.2);
+                border-radius: 0;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+                gap: 8px;
+            }
+            
+            .action-buttons .btn {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+                min-width: auto;
+                flex: 0 0 auto;
+            }
+            
+            body {
+                overflow-y: auto;
+                height: auto;
+            }
+            
+            .accordion-content {
+                max-height: 250px;
+                overflow-y: auto;
+            }
+        }
+        
+        .password-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .password-actions button {
+            background-color: #4a7bab;
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+        
+        .password-actions button:hover {
+            background-color: #3a6a9b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Protection Layer -->
+    <div class="password-container" id="passwordLayer">
+        <div class="password-box">
+            <div class="logo-container">
+                <h1 style="color: var(--primary);">TapNgen</h1>
+            </div>
+            <h2>Enter Password</h2>
+            <input type="password" id="passwordInput" placeholder="Password">
+            <button id="submitPassword">Access Editor</button>
+            <div class="password-actions">
+                <button onclick="changePassword()">Change Password</button>
+                <button onclick="resetPassword()">Reset Password</button>
+                <button onclick="document.getElementById('passwordFileInput').click()">Import Passwords</button>
+                <input type="file" id="passwordFileInput" style="display: none;" accept=".json">
+            </div>
+            <p class="error-message" id="passwordError">Incorrect password. Please try again.</p>
+            <a href="https://wa.me/212660245937" class="whatsapp-button" target="_blank">
+                <i class="fab fa-whatsapp"></i> Contact to Purchase
+            </a>
+            <p style="margin-top: 15px; font-size: 12px; opacity: 0.7;">Admin? <a href="admin.html" style="color: var(--primary);">Login here</a></p>
+        </div>
+    </div>
+
+    <div class="editor-container">
+        <div class="sidebar">
+            <div class="sidebar-content">
+                <div class="editor-title">TapNgen Vcard Generator</div>
+                
+                <!-- General Settings -->
+                <div class="accordion active">
+                    <div class="accordion-header">
+                        <h3>General Settings</h3>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label for="TapNgen">Your Name</label>
+                            <input type="text" id="TapNgen" value="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="tagline">Tagline</label>
+                            <textarea id="tagline">La description de votre entreprises</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="logo">Logo (Image Upload)</label>
+                            <div id="logo-preview-container" style="width: 100px; height: 100px; margin: 0 auto; background-color: white; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; border-radius: 50%; overflow: hidden;">
+                                <img id="logo-preview" src="" alt="Logo Preview" style="max-width: 80%; max-height: 80%;">
+                                <span id="logo-placeholder" style="color: #666; font-size: 12px; text-align: center; padding: 5px;">Your Logo Here</span>
+                            </div>
+                            <label for="logo-upload" class="upload-label">
+                                <i class="fas fa-upload"></i> Upload Logo
+                            </label>
+                            <input type="file" id="logo-upload" class="file-upload" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="logo-scale">Logo Scale (Size)</label>
+                            <div class="slider-container">
+                                <input type="range" id="logo-scale" min="30" max="200" value="70" class="slider">
+                                <span id="logo-scale-value">70%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Colors and Styling -->
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <h3>Colors & Styling</h3>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label for="primary-color">Animation1 Color</label>
+                            <input type="color" id="primary-color" value="#8b0000">
+                        </div>
+                        <div class="form-group">
+                            <label for="secondary-color">Animation3 Color</label>
+                            <input type="color" id="secondary-color" value="#4b3621">
+                        </div>
+                        <div class="form-group">
+                            <label for="accent-color">Animation2 Color</label>
+                            <input type="color" id="accent-color" value="#d4af37">
+                        </div>
+                        <div class="form-group">
+                            <label for="background-color">UPTEXT Color</label>
+                            <input type="color" id="background-color" value="#1a1a2e">
+                        </div>
+                        <div class="form-group">
+                            <label for="text-color">DOWNtext Color</label>
+                            <input type="color" id="text-color" value="#f0f8ff">
+                        </div>
+                        <div class="form-group">
+                            <label for="page-bg-color">Page Background Color</label>
+                            <input type="color" id="page-bg-color" value="#ffffff">
+                        </div>
+                        <div class="form-group">
+                            <label for="section-gradient-start">Section Gradient Start</label>
+                            <input type="color" id="section-gradient-start" value="#0a0a19">
+                        </div>
+                        <div class="form-group">
+                            <label for="section-gradient-end">Section Gradient End</label>
+                            <input type="color" id="section-gradient-end" value="#1a1a2e">
+                        </div>
+                        <div class="form-group">
+                            <label for="gradient-angle">Gradient Angle (degrees)</label>
+                            <div class="slider-container">
+                                <input type="range" id="gradient-angle" min="0" max="360" value="135" class="slider">
+                                <span id="gradient-angle-value">135°</span>
+                            </div>
+                        </div>
+                        <div class="color-preview">
+                            <div class="color-swatch" id="primary-swatch"></div>
+                            <div class="color-swatch" id="secondary-swatch"></div>
+                            <div class="color-swatch" id="accent-swatch"></div>
+                            <div class="color-swatch" id="page-bg-swatch"></div>
+                        </div>
+                        <div class="gradient-preview">
+                            <div id="section-gradient-preview"></div>
+                            <span class="gradient-preview-label">Section Gradient</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Services Section -->
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <h3>Services</h3>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label for="services-title">Services Section Title</label>
+                            <input type="text" id="services-title" value="Nos Services">
+                        </div>
+                        <div id="services-container">
+                            <!-- Services will be added dynamically -->
+                        </div>
+                        <button class="btn add-service-btn" id="add-service-btn">
+                            <i class="fas fa-plus"></i> Add Service
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <h3>Contact Information</h3>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label for="contact-title">Contact Section Title</label>
+                            <input type="text" id="contact-title" value="Contactez-nous">
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-subtitle">Contact Section Subtitle</label>
+                            <input type="text" id="contact-subtitle" value="Exemple:Besoin de conseils?">
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-name">Full Name</label>
+                            <input type="text" id="contact-name" value="TapNgen">
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-address">Address</label>
+                            <textarea id="contact-address">4éme étage, Hall A, 47 Rue el ouroud Casablanca</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-phone">Phone</label>
+                            <input type="text" id="contact-phone" value="0660245937">
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-email">Email</label>
+                            <input type="email" id="contact-email" value="badr.assanoussi@domo28.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-website">Website</label>
+                            <input type="text" id="contact-website" value="domo28.com">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <h3>Footer</h3>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label for="footer-text">Footer Text</label>
+                            <input type="text" id="footer-text" value="&copy; 2025 DOMO28. Tous droits réservés.">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="action-buttons">
+                    <button class="btn" id="preview-btn">Update Preview</button>
+                    <button class="btn btn-secondary" id="download-btn">Download HTML</button>
+                    <button class="btn btn-secondary" id="download-txt-btn">Download as TXT</button>
+                    <button class="btn btn-secondary" id="save-btn">Save</button>
+                    <button class="btn btn-secondary" id="logout-btn">Logout</button>
+                </div>
+                <button class="qr-generator-btn" id="qr-generator-btn">
+                    <i class="fas fa-qrcode"></i> Generate QR Code
+                </button>
+                <div style="margin-top: 10px;">
+                    <label for="import-html" class="qr-generator-btn" style="width: 100%; display: block; text-align: center; cursor: pointer;">
+                        <i class="fas fa-file-import"></i> Import HTML
+                    </label>
+                    <input type="file" id="import-html" accept=".html,.txt" style="display: none;">
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <iframe id="preview-frame" class="preview-frame"></iframe>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">Settings updated!</div>
+
+    <!-- Load external scripts first -->
+    <script src="template-editor.js"></script>
+    <script>
+        // Disable password protection
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordLayer = document.getElementById('passwordLayer');
+            if (passwordLayer) {
+                passwordLayer.style.display = 'none';
+            }
+        });
+    </script>
+
+    <script>
+        // Protection par mot de passe avec obfuscation
+        (function() {
+            // Obfuscation du mot de passe par défaut
+            const _0x2e4f=['charCodeAt','fromCharCode','push','length','join'];
+            const _0x3b5c=['B','a','d','r','v','i','p','2','0','2','5'];
+            const defaultPassword = (function(){
+                let _0x4d2a = [];
+                for(let i = 0; i < _0x3b5c[_0x2e4f[3]]; i++) {
+                    _0x4d2a[_0x2e4f[2]](String[_0x2e4f[1]](_0x3b5c[i][_0x2e4f[0]](0)));
+                }
+                return _0x4d2a[_0x2e4f[4]]('');
+            })();
+            
+            const passwordLayer = document.getElementById("passwordLayer");
+            const passwordInput = document.getElementById("passwordInput");
+            const submitPassword = document.getElementById("submitPassword");
+            const passwordError = document.getElementById("passwordError");
+
+            // Check for stored password or bypass based on query string
+            if (window.location.search.includes('direct=true')) {
+                passwordLayer.style.display = "none";
+            }
+
+            submitPassword.addEventListener("click", checkPassword);
+            passwordInput.addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    checkPassword();
+                }
+            });
+            
+            function checkPassword() {
+                console.log("Checking password...");
+                
+                // Using our passwordManager from passwords.js
+                const result = window.passwordManager.checkPassword(passwordInput.value);
+                
+                if (result.success) {
+                    console.log("Password verified:", result.message);
+                    passwordLayer.style.display = "none";
+                } else {
+                    console.log("Password verification failed:", result.message);
+                    passwordError.style.display = "block";
+                    passwordInput.value = "";
+                    passwordInput.focus();
+                }
+            }
+            
+            // Password management functions
+            window.changePassword = function(newPassword) {
+                if (newPassword && newPassword.trim() !== "") {
+                    const result = window.passwordManager.addPassword(newPassword.trim());
+                    if (result.success) {
+                        window.showNotification("Password changed successfully!");
+                        return true;
+                    } else {
+                        window.showNotification("Error changing password: " + result.message, "error");
+                        return false;
+                    }
+                } else {
+                    window.showNotification("Invalid password!", "error");
+                    return false;
+                }
+            };
+            
+            window.resetPassword = function() {
+                const result = window.passwordManager.deletePasswords();
+                if (result.success) {
+                    window.showNotification("Password reset to default: " + defaultPassword);
+                    return true;
+                } else {
+                    window.showNotification("Error resetting passwords: " + result.message, "error");
+                    return false;
+                }
+            };
+            
+            // Add Password Management UI to sidebar
+            window.addEventListener('DOMContentLoaded', function() {
+                // Create password management accordion
+                /*
+                const sidebarElement = document.querySelector('.sidebar');
+                const accordionHtml = `
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <h3>Password Management</h3>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" placeholder="Enter new password">
+                        </div>
+                        <button class="btn" id="change-password-btn">Change Password</button>
+                        <button class="btn btn-secondary" id="reset-password-btn" style="margin-top: 10px;">Reset to Default</button>
+                    </div>
+                </div>
+                `;
+                
+                // Add the accordion before the action buttons
+                const actionButtons = document.querySelector('.action-buttons');
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = accordionHtml;
+                sidebarElement.insertBefore(tempDiv.firstElementChild, actionButtons);
+                
+                // Add event listeners
+                document.getElementById('change-password-btn').addEventListener('click', function() {
+                    const newPassword = document.getElementById('new-password').value;
+                    if (changePassword(newPassword)) {
+                        document.getElementById('new-password').value = "";
+                    }
+                });
+                
+                document.getElementById('reset-password-btn').addEventListener('click', resetPassword);
+                
+                // Initialize the new accordion
+                const newAccordionHeader = document.querySelector('.accordion:last-of-type .accordion-header');
+                newAccordionHeader.addEventListener('click', function() {
+                    const accordion = this.parentElement;
+                    accordion.classList.toggle('active');
+                });
+                */
+            });
+            
+            // Anti-theft measures
+            document.addEventListener('contextmenu', event => event.preventDefault()); // Disable right-click
+            document.onkeydown = function(e) {
+                // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+                if (
+                    e.keyCode === 123 || 
+                    (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+                    (e.ctrlKey && e.shiftKey && e.keyCode === 74) || 
+                    (e.ctrlKey && e.keyCode === 85)
+                ) {
+                    return false;
+                }
+            };
+
+            // Additional security: prevent source viewing
+            window.addEventListener('devtoolschange', function(e) {
+                if (e.detail.open) {
+                    document.body.innerHTML = "Developer tools access not allowed";
+                }
+            });
+            
+            // DevTools detection 
+            let devtools = function() {};
+            devtools.toString = function() {
+                sessionStorage.removeItem("authorized");
+                document.body.innerHTML = "Unauthorized access detected";
+                return '';
+            }
+            console.log('%c', devtools);
+            
+            // Service template
+            const serviceTemplate = `
+                <div class="service-item" data-id="service-{id}">
+                    <div class="service-item-header">
+                        <h4>Service #{num}</h4>
+                        <button class="delete-btn" data-id="service-{id}">Delete</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="service-icon-{id}">Icon (Font Awesome)</label>
+                        <input type="text" id="service-icon-{id}" placeholder="fas fa-balance-scale" value="{icon}">
+                    </div>
+                    <div class="form-group">
+                        <label for="service-title-{id}">Service Title</label>
+                        <input type="text" id="service-title-{id}" placeholder="Service Title" value="{title}">
+                    </div>
+                    <div class="form-group">
+                        <label for="service-desc-{id}">Service Description</label>
+                        <textarea id="service-desc-{id}" placeholder="Service description...">{description}</textarea>
+                    </div>
+                </div>
+            `;
+            
+            // Default services data
+            const defaultServices = [
+                {
+                    id: 1,
+                    icon: "fas fa-balance-scale",
+                    title: "Service1",
+                    description: "description du service1"
+                },
+                {
+                    id: 2,
+                    icon: "fas fa-gavel",
+                    title: "Service2",
+                    description: "description du service2"
+                },
+                {
+                    id: 3,
+                    icon: "fas fa-handshake",
+                    title: "Service3",
+                    description: "description du service3"
+                }
+            ];
+            
+            // Initialize variables for template
+            let services = [...defaultServices];
+            let nextServiceId = services.length + 1;
+            let logoData = '';
+            
+            // DOM elements
+            const previewFrame = document.getElementById('preview-frame');
+            const previewBtn = document.getElementById('preview-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const downloadTxtBtn = document.getElementById('download-txt-btn');
+            const servicesContainer = document.getElementById('services-container');
+            const addServiceBtn = document.getElementById('add-service-btn');
+            const notification = document.getElementById('notification');
+            const logoUpload = document.getElementById('logo-upload');
+            const logoPreview = document.getElementById('logo-preview');
+            const logoScale = document.getElementById('logo-scale');
+            const logoScaleValue = document.getElementById('logo-scale-value');
+            
+            // Color elements
+            const primaryColor = document.getElementById('primary-color');
+            const secondaryColor = document.getElementById('secondary-color');
+            const accentColor = document.getElementById('accent-color');
+            const backgroundColor = document.getElementById('background-color');
+            const textColor = document.getElementById('text-color');
+            const pageBgColor = document.getElementById('page-bg-color');
+            const sectionGradientStart = document.getElementById('section-gradient-start');
+            const sectionGradientEnd = document.getElementById('section-gradient-end');
+            const gradientAngle = document.getElementById('gradient-angle');
+            const gradientAngleValue = document.getElementById('gradient-angle-value');
+            
+            // Color swatches
+            const primarySwatch = document.getElementById('primary-swatch');
+            const secondarySwatch = document.getElementById('secondary-swatch');
+            const accentSwatch = document.getElementById('accent-swatch');
+            const pageBgSwatch = document.getElementById('page-bg-swatch');
+            const sectionGradientPreview = document.getElementById('section-gradient-preview');
+            
+            // Initialize color swatches
+            updateColorSwatches();
+            
+            // Initialize gradient preview
+            updateGradientPreview();
+            
+            // Initialize service items
+            initializeServices();
+            
+            // Initialize logo scale
+            updateLogoScale();
+            
+            // Initialize accordion behavior
+            initializeAccordions();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Generate initial preview
+            updatePreview();
+            
+            // Handle accordion toggle
+            function initializeAccordions() {
+                const accordions = document.querySelectorAll('.accordion-header');
+                accordions.forEach(header => {
+                    header.addEventListener('click', () => {
+                        const accordion = header.parentElement;
+                        accordion.classList.toggle('active');
+                    });
+                });
+            }
+            
+            // Initialize services in the editor
+            function initializeServices() {
+                servicesContainer.innerHTML = '';
+                services.forEach((service, index) => {
+                    const html = serviceTemplate
+                        .replace(/{id}/g, service.id)
+                        .replace(/{num}/g, index + 1)
+                        .replace(/{icon}/g, service.icon)
+                        .replace(/{title}/g, service.title)
+                        .replace(/{description}/g, service.description);
+                    servicesContainer.innerHTML += html;
+                });
+            }
+            
+            // Set up all event listeners
+            function setupEventListeners() {
+                // Preview button
+                previewBtn.addEventListener('click', updatePreview);
+                
+                // Download buttons
+                downloadBtn.addEventListener('click', downloadHTML);
+                downloadTxtBtn.addEventListener('click', downloadAsText);
+                
+                // Add service button
+                addServiceBtn.addEventListener('click', addService);
+                
+                // Logout button
+                document.getElementById('logout-btn').addEventListener('click', function() {
+                    sessionStorage.removeItem("authorized");
+                    window.location.reload();
+                });
+                
+                // QR Generator button
+                document.getElementById('qr-generator-btn').addEventListener('click', function() {
+                    window.location.href = 'qr-generator.html';
+                });
+                
+                // Delete service buttons
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('delete-btn')) {
+                        const serviceId = e.target.getAttribute('data-id').replace('service-', '');
+                        deleteService(parseInt(serviceId));
+                    }
+                });
+                
+                // Logo upload
+                logoUpload.addEventListener('change', handleLogoUpload);
+                
+                // Logo scale slider
+                logoScale.addEventListener('input', function() {
+                    updateLogoScale();
+                    // Update preview immediately on every change
+                    updatePreview();
+                });
+                
+                // Color inputs
+                primaryColor.addEventListener('input', updateColorSwatches);
+                secondaryColor.addEventListener('input', updateColorSwatches);
+                accentColor.addEventListener('input', updateColorSwatches);
+                backgroundColor.addEventListener('input', updateColorSwatches);
+                textColor.addEventListener('input', updateColorSwatches);
+                pageBgColor.addEventListener('input', updateColorSwatches);
+                
+                // Gradient inputs
+                sectionGradientStart.addEventListener('input', updateGradientPreview);
+                sectionGradientEnd.addEventListener('input', updateGradientPreview);
+                gradientAngle.addEventListener('input', updateGradientPreview);
+            }
+            
+            // Update color swatches
+            function updateColorSwatches() {
+                primarySwatch.style.backgroundColor = primaryColor.value;
+                secondarySwatch.style.backgroundColor = secondaryColor.value;
+                accentSwatch.style.backgroundColor = accentColor.value;
+                pageBgSwatch.style.backgroundColor = pageBgColor.value;
+            }
+            
+            // Update gradient preview
+            function updateGradientPreview() {
+                const angle = gradientAngle.value;
+                gradientAngleValue.textContent = `${angle}°`;
+                sectionGradientPreview.style.background = `linear-gradient(${angle}deg, ${sectionGradientStart.value}, ${sectionGradientEnd.value})`;
+            }
+            
+            // Add a new service
+            function addService() {
+                const newService = {
+                    id: nextServiceId++,
+                    icon: "fas fa-plus-circle",
+                    title: "New Service",
+                    description: "Description of the new service."
+                };
+                
+                services.push(newService);
+                
+                const html = serviceTemplate
+                    .replace(/{id}/g, newService.id)
+                    .replace(/{num}/g, services.length)
+                    .replace(/{icon}/g, newService.icon)
+                    .replace(/{title}/g, newService.title)
+                    .replace(/{description}/g, newService.description);
+                    
+                servicesContainer.innerHTML += html;
+            }
+            
+            // Delete a service
+            function deleteService(id) {
+                services = services.filter(service => service.id !== id);
+                initializeServices();
+            }
+            
+            // Handle logo upload
+            function handleLogoUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    logoPreview.src = event.target.result;
+                    logoData = event.target.result;
+                    window.logoData = logoData; // Assign to window.logoData for accessibility by iframe
+                    document.getElementById('logo-placeholder').style.display = 'none';
+                    updateLogoScale(); // Apply scale immediately when logo is uploaded
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Update logo scale based on slider
+            function updateLogoScale() {
+                const scale = logoScale.value;
+                logoScaleValue.textContent = `${scale}%`;
+                logoPreview.style.maxWidth = `${scale}%`;
+                logoPreview.style.maxHeight = `${scale}%`;
+                
+                // Update preview immediately if iframe is loaded
+                if (previewFrame.contentDocument) {
+                    const logoImg = previewFrame.contentDocument.querySelector('.circle-image');
+                    if (logoImg) {
+                        // Direct assignment is most reliable
+                        logoImg.style.width = `${scale}%`;
+                        logoImg.style.maxWidth = 'none';
+                        logoImg.style.maxHeight = 'none';
+                    }
+                }
+            }
+            
+            // Show notification
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Update the preview iframe
+            function updatePreview() {
+                // Get all current values
+                const lawFirmName = document.getElementById('TapNgen').value;
+                const tagline = document.getElementById('tagline').value;
+                const primaryColorValue = primaryColor.value;
+                const secondaryColorValue = secondaryColor.value;
+                const accentColorValue = accentColor.value;
+                const backgroundColorValue = backgroundColor.value;
+                const textColorValue = textColor.value;
+                const pageBgColorValue = pageBgColor.value;
+                const sectionGradientStartValue = sectionGradientStart.value;
+                const sectionGradientEndValue = sectionGradientEnd.value;
+                const gradientAngleValue = gradientAngle.value;
+                const servicesTitle = document.getElementById('services-title').value;
+                const contactTitle = document.getElementById('contact-title').value;
+                const contactSubtitle = document.getElementById('contact-subtitle').value;
+                const contactName = document.getElementById('contact-name').value;
+                const contactAddress = document.getElementById('contact-address').value;
+                const contactPhone = document.getElementById('contact-phone').value;
+                const contactEmail = document.getElementById('contact-email').value;
+                const contactWebsite = document.getElementById('contact-website').value;
+                const footerText = document.getElementById('footer-text').value;
+                const logoScaleValue = logoScale.value;
+                
+                // Update services data
+                updateServicesData();
+                
+                // Create HTML template
+                const html = generateHTML({
+                    lawFirmName,
+                    tagline,
+                    primaryColor: primaryColorValue,
+                    secondaryColor: secondaryColorValue,
+                    accentColor: accentColorValue,
+                    backgroundColor: backgroundColorValue,
+                    textColor: textColorValue,
+                    pageBgColor: pageBgColorValue,
+                    sectionGradientStart: sectionGradientStartValue,
+                    sectionGradientEnd: sectionGradientEndValue,
+                    gradientAngle: gradientAngleValue,
+                    servicesTitle,
+                    contactTitle,
+                    contactSubtitle,
+                    contactName,
+                    contactAddress,
+                    contactPhone,
+                    contactEmail,
+                    contactWebsite,
+                    footerText,
+                    logoData,
+                    logoScale: logoScaleValue,
+                    services
+                });
+                
+                // Update the iframe content
+                const iframe = document.getElementById('preview-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(html);
+                iframeDoc.close();
+                
+                showNotification('Preview updated!');
+            }
+            
+            // Update services data from form
+            function updateServicesData() {
+                services.forEach(service => {
+                    const iconInput = document.getElementById(`service-icon-${service.id}`);
+                    const titleInput = document.getElementById(`service-title-${service.id}`);
+                    const descInput = document.getElementById(`service-desc-${service.id}`);
+                    
+                    if (iconInput && titleInput && descInput) {
+                        service.icon = iconInput.value;
+                        service.title = titleInput.value;
+                        service.description = descInput.value;
+                    }
+                });
+            }
+            
+            // Download the HTML file
+            function downloadHTML() {
+                // Update services data
+                updateServicesData();
+                
+                // Get all current values
+                const lawFirmName = document.getElementById('TapNgen').value;
+                const tagline = document.getElementById('tagline').value;
+                const primaryColorValue = primaryColor.value;
+                const secondaryColorValue = secondaryColor.value;
+                const accentColorValue = accentColor.value;
+                const backgroundColorValue = backgroundColor.value;
+                const textColorValue = textColor.value;
+                const pageBgColorValue = pageBgColor.value;
+                const sectionGradientStartValue = sectionGradientStart.value;
+                const sectionGradientEndValue = sectionGradientEnd.value;
+                const gradientAngleValue = gradientAngle.value;
+                const servicesTitle = document.getElementById('services-title').value;
+                const contactTitle = document.getElementById('contact-title').value;
+                const contactSubtitle = document.getElementById('contact-subtitle').value;
+                const contactName = document.getElementById('contact-name').value;
+                const contactAddress = document.getElementById('contact-address').value;
+                const contactPhone = document.getElementById('contact-phone').value;
+                const contactEmail = document.getElementById('contact-email').value;
+                const contactWebsite = document.getElementById('contact-website').value;
+                const footerText = document.getElementById('footer-text').value;
+                const logoScaleValue = logoScale.value;
+                
+                // Generate the HTML
+                const html = generateHTML({
+                    lawFirmName,
+                    tagline,
+                    primaryColor: primaryColorValue,
+                    secondaryColor: secondaryColorValue,
+                    accentColor: accentColorValue,
+                    backgroundColor: backgroundColorValue,
+                    textColor: textColorValue,
+                    pageBgColor: pageBgColorValue,
+                    sectionGradientStart: sectionGradientStartValue,
+                    sectionGradientEnd: sectionGradientEndValue,
+                    gradientAngle: gradientAngleValue,
+                    servicesTitle,
+                    contactTitle,
+                    contactSubtitle,
+                    contactName,
+                    contactAddress,
+                    contactPhone,
+                    contactEmail,
+                    contactWebsite,
+                    footerText,
+                    logoData,
+                    logoScale: logoScaleValue,
+                    services
+                });
+                
+                // Create a friendly file name based on the law firm name
+                const fileName = lawFirmName.replace(/[^\w\s]/gi, '').replace(/\s+/g, '-').toLowerCase() + '.html';
+                
+                // Create blob and download link
+                const blob = new Blob([html], {type: 'text/html'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Show instructions about unblocking the file in Windows
+                showNotification('HTML file downloaded! If Windows shows a security warning, right-click the file, select Properties, and check "Unblock".');
+                // Keep notification visible longer for this important message
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 8000); // Extended to 8 seconds instead of the usual 3
+            }
+
+            // Download as plain text file (avoids Windows security restrictions)
+            function downloadAsText() {
+                // Update services data
+                updateServicesData();
+                
+                // Get all current values (same as in downloadHTML)
+                const lawFirmName = document.getElementById('TapNgen').value;
+                const tagline = document.getElementById('tagline').value;
+                const primaryColorValue = primaryColor.value;
+                const secondaryColorValue = secondaryColor.value;
+                const accentColorValue = accentColor.value;
+                const backgroundColorValue = backgroundColor.value;
+                const textColorValue = textColor.value;
+                const pageBgColorValue = pageBgColor.value;
+                const sectionGradientStartValue = sectionGradientStart.value;
+                const sectionGradientEndValue = sectionGradientEnd.value;
+                const gradientAngleValue = gradientAngle.value;
+                const servicesTitle = document.getElementById('services-title').value;
+                const contactTitle = document.getElementById('contact-title').value;
+                const contactSubtitle = document.getElementById('contact-subtitle').value;
+                const contactName = document.getElementById('contact-name').value;
+                const contactAddress = document.getElementById('contact-address').value;
+                const contactPhone = document.getElementById('contact-phone').value;
+                const contactEmail = document.getElementById('contact-email').value;
+                const contactWebsite = document.getElementById('contact-website').value;
+                const footerText = document.getElementById('footer-text').value;
+                const logoScaleValue = logoScale.value;
+                
+                // Generate the HTML content
+                const html = generateHTML({
+                    lawFirmName,
+                    tagline,
+                    primaryColor: primaryColorValue,
+                    secondaryColor: secondaryColorValue,
+                    accentColor: accentColorValue,
+                    backgroundColor: backgroundColorValue,
+                    textColor: textColorValue,
+                    pageBgColor: pageBgColorValue,
+                    sectionGradientStart: sectionGradientStartValue,
+                    sectionGradientEnd: sectionGradientEndValue,
+                    gradientAngle: gradientAngleValue,
+                    servicesTitle,
+                    contactTitle,
+                    contactSubtitle,
+                    contactName,
+                    contactAddress,
+                    contactPhone,
+                    contactEmail,
+                    contactWebsite,
+                    footerText,
+                    logoData,
+                    logoScale: logoScaleValue,
+                    services
+                });
+                
+                // Create a friendly file name
+                const fileName = lawFirmName.replace(/[^\w\s]/gi, '').replace(/\s+/g, '-').toLowerCase() + '.txt';
+                
+                // Create blob as text file and download
+                const blob = new Blob([html], {type: 'text/plain;charset=utf-8'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('File downloaded as text file. To use it as HTML: 1) Rename to .html after downloading 2) Open with browser');
+                // Keep notification visible longer
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 8000);
+            }
+
+            // Save editor state to localStorage
+            function saveEditorState() {
+                // Gather all current values
+                const state = {
+                    lawFirmName: document.getElementById('TapNgen').value,
+                    tagline: document.getElementById('tagline').value,
+                    primaryColor: primaryColor.value,
+                    secondaryColor: secondaryColor.value,
+                    accentColor: accentColor.value,
+                    backgroundColor: backgroundColor.value,
+                    textColor: textColor.value,
+                    pageBgColor: pageBgColor.value,
+                    sectionGradientStart: sectionGradientStart.value,
+                    sectionGradientEnd: sectionGradientEnd.value,
+                    gradientAngle: gradientAngle.value,
+                    servicesTitle: document.getElementById('services-title').value,
+                    contactTitle: document.getElementById('contact-title').value,
+                    contactSubtitle: document.getElementById('contact-subtitle').value,
+                    contactName: document.getElementById('contact-name').value,
+                    contactAddress: document.getElementById('contact-address').value,
+                    contactPhone: document.getElementById('contact-phone').value,
+                    contactEmail: document.getElementById('contact-email').value,
+                    contactWebsite: document.getElementById('contact-website').value,
+                    footerText: document.getElementById('footer-text').value,
+                    logoData: logoData,
+                    logoScale: logoScale.value,
+                    services: services
+                };
+                localStorage.setItem('lawFirmEditorState', JSON.stringify(state));
+                showNotification('Settings saved!');
+            }
+
+            // Load editor state from localStorage
+            function loadEditorState() {
+                const stateStr = localStorage.getItem('lawFirmEditorState');
+                if (!stateStr) return;
+                try {
+                    const state = JSON.parse(stateStr);
+                    document.getElementById('TapNgen').value = state.lawFirmName || '';
+                    document.getElementById('tagline').value = state.tagline || '';
+                    primaryColor.value = state.primaryColor || primaryColor.value;
+                    secondaryColor.value = state.secondaryColor || secondaryColor.value;
+                    accentColor.value = state.accentColor || accentColor.value;
+                    backgroundColor.value = state.backgroundColor || backgroundColor.value;
+                    textColor.value = state.textColor || textColor.value;
+                    pageBgColor.value = state.pageBgColor || pageBgColor.value;
+                    sectionGradientStart.value = state.sectionGradientStart || sectionGradientStart.value;
+                    sectionGradientEnd.value = state.sectionGradientEnd || sectionGradientEnd.value;
+                    gradientAngle.value = state.gradientAngle || gradientAngle.value;
+                    document.getElementById('services-title').value = state.servicesTitle || '';
+                    document.getElementById('contact-title').value = state.contactTitle || '';
+                    document.getElementById('contact-subtitle').value = state.contactSubtitle || '';
+                    document.getElementById('contact-name').value = state.contactName || '';
+                    document.getElementById('contact-address').value = state.contactAddress || '';
+                    document.getElementById('contact-phone').value = state.contactPhone || '';
+                    document.getElementById('contact-email').value = state.contactEmail || '';
+                    document.getElementById('contact-website').value = state.contactWebsite || '';
+                    document.getElementById('footer-text').value = state.footerText || '';
+                    logoData = state.logoData || '';
+                    window.logoData = logoData; // Make logoData available globally
+                    logoScale.value = state.logoScale || logoScale.value;
+                    // Restore services
+                    if (Array.isArray(state.services)) {
+                        services = state.services;
+                        nextServiceId = services.length + 1;
+                        initializeServices();
+                    }
+                    // Restore logo preview
+                    if (logoData) {
+                        logoPreview.src = logoData;
+                    }
+                    // Update UI
+                    updateColorSwatches();
+                    updateGradientPreview();
+                    updateLogoScale();
+                    updatePreview();
+                } catch (e) {
+                    console.error('Failed to load saved state:', e);
+                }
+            }
+
+            // Save button event
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.addEventListener('click', saveEditorState);
+            // Load state on page load
+            window.addEventListener('DOMContentLoaded', loadEditorState);
+
+            // Add file import functionality
+            document.getElementById('import-html').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const htmlContent = event.target.result;
+                    
+                    // Update the iframe preview with the imported HTML
+                    const iframe = document.getElementById('preview-frame');
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframeDoc.open();
+                    iframeDoc.write(htmlContent);
+                    iframeDoc.close();
+                    
+                    showNotification('HTML file imported successfully!');
+                };
+                reader.onerror = function() {
+                    showNotification('Error reading file', 'error');
+                };
+                reader.readAsText(file);
+                
+                // Reset the file input
+                e.target.value = '';
+            });
+
+            // Add this global function for vCard download from the preview iframe
+            window.downloadVCardFromEditor = function() {
+                // Get all current values from the editor
+                const lawFirmName = document.getElementById('TapNgen').value;
+                const contactName = document.getElementById('contact-name').value;
+                const contactPhone = document.getElementById('contact-phone').value;
+                const contactEmail = document.getElementById('contact-email').value;
+                const contactAddress = document.getElementById('contact-address').value;
+                const contactWebsite = document.getElementById('contact-website').value;
+                const logoData = window.logoData || '';
+                
+                // vCard fields
+                const nameParts = contactName.split(' ');
+                const lastName = nameParts.length > 1 ? nameParts.pop() : contactName;
+                const firstName = nameParts.join(' ');
+                const organization = lawFirmName;
+                
+                // Format phone number to ensure compatibility (remove spaces, etc)
+                const formattedPhone = contactPhone.replace(/\s+/g, '');
+                
+                // vCard string with TEL formatted according to standards
+                let vCardData = "BEGIN:VCARD\r\n" +
+                    "VERSION:3.0\r\n" +
+                    "N:" + lastName + ";" + firstName + ";;;\r\n" +
+                    "FN:" + contactName + "\r\n" +
+                    "ORG:" + organization + "\r\n" +
+                    "TEL;type=CELL:" + formattedPhone + "\r\n" +
+                    "ADR;type=WORK:;;" + contactAddress + ";;;\r\n" +
+                    "EMAIL:" + contactEmail + "\r\n" +
+                    "URL:" + contactWebsite + "\r\n";
+                
+                // Add the photo if available (base64 format)
+                if (logoData && logoData.startsWith('data:image')) {
+                    try {
+                        // Remove header from base64 data and determine image type
+                        const matches = logoData.match(/^data:(image\/\w+);base64,(.+)$/);
+                        if (matches && matches.length === 3) {
+                            const imageType = matches[1];
+                            const base64Data = matches[2];
+                            
+                            // Format based on vCard 3.0 specification
+                            if (imageType === 'image/jpeg' || imageType === 'image/jpg') {
+                                vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:" + base64Data + "\r\n";
+                            } else if (imageType === 'image/png') {
+                                // Convert PNG to JPEG for better mobile compatibility
+                                vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:" + base64Data + "\r\n";
+                            } else {
+                                // For any other image type, default to JPEG
+                                vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:" + base64Data + "\r\n";
+                            }
+                        } else {
+                            // Add placeholder image for better compatibility
+                            vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAIAAgAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+t6KKKACiiigAooooAKKKKACiiigAooooA//2Q==" + "\r\n";
+                        }
+                    } catch (error) {
+                        console.error("Error processing logo:", error);
+                        // Add placeholder image if there's an error
+                        vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAIAAgAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+t6KKKACiiigAooooAKKKKACiiigAooooA//2Q==" + "\r\n";
+                    }
+                } else {
+                    // Add placeholder image for better compatibility with mobile contacts apps
+                    vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBVU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAIAAgAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+t6KKKACiiigAooooAKKKKACiiigAooooA//2Q==" + "\r\n";
+                }
+                vCardData += "END:VCARD";
+                
+                // Create blob with proper MIME type and line endings
+                const blob = new Blob([vCardData], { type: 'text/vcard' });
+                const url = URL.createObjectURL(blob);
+                
+                // For mobile devices, create a temporary link with download attribute
+                const fileName = firstName + '-' + lastName + '-Contact.vcf';
+                
+                // Try direct download first
+                try {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Fallback for mobile: open in new tab/window
+                    setTimeout(function() {
+                        const ua = navigator.userAgent.toLowerCase();
+                        const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+                        
+                        if (isMobile) {
+                            window.open(url, '_blank');
+                        }
+                    }, 1000);
+                    
+                    URL.revokeObjectURL(url);
+                    showNotification('Contact card downloaded.');
+                } catch (e) {
+                    console.error('vCard download error:', e);
+                    // Fallback method
+                    window.open(url, '_blank');
+                    showNotification('Please save the opened file as .vcf and import to your contacts app.');
+                }
+            };
+
+            // Ajouter l'écouteur d'événement pour l'importation de fichier
+            document.getElementById('passwordFileInput').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) {
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        // D'abord, essayer de parser le JSON
+                        const jsonData = JSON.parse(e.target.result);
+                        
+                        // Vérifier si c'est un fichier de mots de passe valide
+                        if (!jsonData.passwords || !Array.isArray(jsonData.passwords)) {
+                            throw new Error("Format de fichier invalide");
+                        }
+                        
+                        // Importer les mots de passe
+                        const result = window.passwordManager.importPasswords(jsonData);
+                        if (result.success) {
+                            showNotification("Mots de passe importés avec succès!");
+                            // Recharger les mots de passe
+                            window.passwordManager.getPasswords();
+                        } else {
+                            showNotification("Erreur lors de l'importation: " + result.message, "error");
+                        }
+                    } catch (error) {
+                        console.error("Erreur d'importation:", error);
+                        showNotification("Erreur lors de l'importation: Format de fichier invalide", "error");
+                    }
+                };
+                reader.onerror = function() {
+                    showNotification("Erreur lors de la lecture du fichier", "error");
+                };
+                reader.readAsText(file);
+                
+                // Reset file input
+                event.target.value = '';
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapNgen Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="passwords.js" defer></script>
+    <style>
+        :root {
+            --primary: #00e7b5;
+            --secondary: #4b3621;
+            --admin-bg: #1a1a1a;
+            --admin-text: #f0f0f0;
+            --admin-panel: #2a2a2a;
+            --admin-highlight: #4a7bab;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--admin-bg);
+            color: var(--admin-text);
+            line-height: 1.6;
+        }
+        
+        /* Admin Login Layer */
+        .admin-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--admin-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        
+        .admin-box {
+            background-color: var(--admin-panel);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .admin-box h1 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .admin-box h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .admin-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            color: var(--admin-text);
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-box button {
+            background-color: var(--primary);
+            color: #222;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .admin-box button:hover {
+            background-color: #00c29e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .admin-box button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .admin-box .error-message {
+            color: #ff5252;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .logo-container {
+            margin-bottom: 30px;
+        }
+        
+        .back-link {
+            color: var(--primary);
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            text-decoration: none;
+            transform: translateX(-3px);
+            color: #00c29e;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            background-color: #4CAF50;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 9999;
+            transform: translateX(110%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        /* Password management panel */
+        .password-panel {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .password-list {
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .password-item {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .copy-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-right: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .copy-btn:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .password-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        #exportPasswordsBtn, #importPasswordsBtn {
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #exportPasswordsBtn:hover, #importPasswordsBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        #passwordsTextarea {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Login Layer -->
+    <div class="admin-container" id="adminLoginLayer">
+        <div class="admin-box">
+            <div class="logo-container">
+                <h1>TapNgen Admin</h1>
+            </div>
+            <h2>Admin Login</h2>
+            <input type="password" id="adminPassword" placeholder="Admin Password">
+            <button id="submitAdminPassword">Login</button>
+            <p class="error-message" id="adminPasswordError">Incorrect admin password. Please try again.</p>
+            <a href="index.html" class="back-link">← Back to Editor</a>
+        </div>
+    </div>
+    
+    <!-- Password Management Panel -->
+    <div class="admin-container" id="passwordPanel" style="display: none;">
+        <div class="admin-box">
+            <h1>TapNgen Password Management</h1>
+            
+            <div style="margin: 20px 0;">
+                <input type="text" id="newUserPassword" placeholder="Generate a password for new user">
+                <button id="generatePasswordBtn">Generate Random</button>
+                <button id="addPasswordBtn">Add Password</button>
+            </div>
+            
+            <div class="password-list" id="passwordList">
+                <!-- Passwords will be listed here -->
+            </div>
+            
+            <div style="margin: 15px 0; text-align: center;">
+                <button id="downloadPasswordsBtn" style="background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px;">Download Passwords File</button>
+                <button id="uploadPasswordsBtn" style="background-color: #FFA500; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px;">Upload Passwords File</button>
+                <input type="file" id="passwordsFileInput" style="display: none;">
+            </div>
+            
+            <div style="margin: 15px 0; text-align: center; display: none;" id="passwordFileInstructions">
+                <div style="background-color: #333; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">How to Use Password Files</h3>
+                    <ol style="text-align: left; padding-left: 20px;">
+                        <li>Add the passwords you want to share</li>
+                        <li>Click "Download Passwords File"</li>
+                        <li>Share this file with your friends securely</li>
+                        <li>Your friends should place this file on their server with your TapNgen site</li>
+                        <li>The system will automatically use these passwords for authentication</li>
+                    </ol>
+                    <button id="toggleInstructionsBtn" style="margin-top: 10px; background-color: #555; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Hide Instructions</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                <button id="logoutBtn">Logout</button>
+                <a href="index.html" class="back-link" style="background-color: #555; color: white; text-decoration: none; padding: 12px 24px; border-radius: 5px; display: inline-block;">Back to Editor</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Protection contre les outils de développement
+        (function() {
+            // Détection des outils de développement
+            const devtools = {
+                isOpen: false,
+                orientation: undefined
+            };
+            
+            // Vérification par différence de dimensions
+            const threshold = 160;
+            const emitEvent = (isOpen, orientation) => {
+                window.dispatchEvent(new CustomEvent('devtoolschange', {
+                    detail: {
+                        isOpen,
+                        orientation
+                    }
+                }));
+            };
+            
+            // Vérification par console.clear
+            const checkDevTools = () => {
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                const orientation = widthThreshold ? 'vertical' : 'horizontal';
+                
+                if (
+                    !(heightThreshold && widthThreshold) &&
+                    ((window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || widthThreshold || heightThreshold)
+                ) {
+                    if (!devtools.isOpen || devtools.orientation !== orientation) {
+                        emitEvent(true, orientation);
+                    }
+                    devtools.isOpen = true;
+                    devtools.orientation = orientation;
+                } else {
+                    if (devtools.isOpen) {
+                        emitEvent(false, undefined);
+                    }
+                    devtools.isOpen = false;
+                    devtools.orientation = undefined;
+                }
+            };
+            
+            window.addEventListener('devtoolschange', function(e) {
+                if (e.detail.isOpen) {
+                    // Au lieu de bloquer complètement, on affiche juste un avertissement
+                    const warning = document.createElement('div');
+                    warning.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ff4444;color:white;padding:10px;text-align:center;z-index:9999;';
+                    warning.textContent = 'Attention: Les outils de développement sont détectés. Certaines fonctionnalités peuvent être limitées.';
+                    document.body.appendChild(warning);
+                    
+                    // Supprimer l'avertissement après 5 secondes
+                    setTimeout(() => {
+                        warning.remove();
+                    }, 5000);
+                }
+            });
+            
+            // Vérification périodique
+            setInterval(checkDevTools, 1000);
+            
+            // Vérification par console.log
+            const consoleCheck = new Image();
+            consoleCheck.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            consoleCheck.onload = function() {
+                const originalConsoleLog = console.log;
+                console.log = function() {
+                    checkDevTools();
+                    originalConsoleLog.apply(console, arguments);
+                };
+            };
+        })();
+        
+        // Chargement du mot de passe admin avec obfuscation avancée - NIVEAU 3
+        (function(){
+            // Fonction de mélange
+            function _0x4f8a(_0x3c7b){
+                return _0x3c7b.split('').sort(function(){return 0.5-Math.random()}).join('');
+            }
+            
+            // Encodage hexadécimal
+            function _0x2d7c(_0x5e3f){
+                return Array.from(_0x5e3f).map(function(_0x7b2e){
+                    return ('0'+_0x7b2e.charCodeAt(0).toString(16)).slice(-2);
+                }).join('');
+            }
+            
+            // Décodage hexadécimal
+            function _0x1e9d(_0x4c7d){
+                let _0x3a8b = '';
+                for(let i=0; i<_0x4c7d.length; i+=2){
+                    _0x3a8b += String.fromCharCode(parseInt(_0x4c7d.substr(i,2), 16));
+                }
+                return _0x3a8b;
+            }
+            
+            // Valeurs encodées et mélangées
+            const _0x7c3e = ['54','61','70','4e','67','65','6e','41','64','6d','69','6e','40','40','32','30','32','35'];
+            const _0x9d4f = _0x4f8a('XZABCDEFGHIJKLMNOPQRSTUVWY');
+            
+            // Reconstruction du mot de passe
+            window._0x2c8d = function(){
+                return _0x1e9d(_0x7c3e.join(''));
+            };
+        })();
+        
+        // Mot de passe obfusqué - Ne pas modifier cette ligne
+        let adminPass = window._0x2c8d();
+        
+        // Fonction pour charger le fichier .env
+        async function loadEnvFile() {
+            try {
+                const response = await fetch('.env');
+                if (response.ok) {
+                    const text = await response.text();
+                    // Analyse du fichier .env pour extraire ADMIN_PASSWORD
+                    const adminPasswordMatch = text.match(/ADMIN_PASSWORD=(.+)/);
+                    if (adminPasswordMatch && adminPasswordMatch[1]) {
+                        // Encodage du mot de passe pour plus de sécurité
+                        const pwd = adminPasswordMatch[1].trim();
+                        adminPass = Array.from(pwd).map(c => String.fromCharCode(c.charCodeAt(0))).join('');
+                    }
+                }
+            } catch (error) {
+                // Silencieux en cas d'erreur pour ne pas révéler d'informations
+            }
+        }
+        
+        // Charger le fichier .env au démarrage
+        loadEnvFile();
+        
+        // DOM Elements
+        const adminLoginLayer = document.getElementById("adminLoginLayer");
+        const passwordPanel = document.getElementById("passwordPanel");
+        const adminPassword = document.getElementById("adminPassword");
+        const submitAdminPassword = document.getElementById("submitAdminPassword");
+        const adminPasswordError = document.getElementById("adminPasswordError");
+        const newUserPassword = document.getElementById("newUserPassword");
+        const generatePasswordBtn = document.getElementById("generatePasswordBtn");
+        const addPasswordBtn = document.getElementById("addPasswordBtn");
+        const passwordList = document.getElementById("passwordList");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const notification = document.getElementById("notification");
+        
+        // In-memory passwords array
+        let passwordsArray = [];
+        
+        // Event listeners
+        submitAdminPassword.addEventListener("click", checkAdminPassword);
+        adminPassword.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                checkAdminPassword();
+            }
+        });
+        
+        generatePasswordBtn.addEventListener("click", generateRandomPassword);
+        addPasswordBtn.addEventListener("click", addPassword);
+        logoutBtn.addEventListener("click", logout);
+        
+        // Add event listeners for download and upload
+        document.getElementById("downloadPasswordsBtn").addEventListener("click", downloadPasswordsFile);
+        document.getElementById("uploadPasswordsBtn").addEventListener("click", function() {
+            document.getElementById("passwordsFileInput").click();
+        });
+        document.getElementById("passwordsFileInput").addEventListener("change", uploadPasswordsFile);
+        
+        // Toggle instructions
+        document.getElementById("downloadPasswordsBtn").addEventListener("click", function() {
+            document.getElementById("passwordFileInstructions").style.display = "block";
+        });
+        document.getElementById("toggleInstructionsBtn").addEventListener("click", function() {
+            document.getElementById("passwordFileInstructions").style.display = "none";
+        });
+        
+        // Check if admin is already logged in
+        if (sessionStorage.getItem("adminAuthorized") === "true") {
+            showPasswordPanel();
+        }
+        
+        // Check admin password
+        function checkAdminPassword() {
+            // S'assurer que le mot de passe .env est chargé
+            if (adminPassword.value === adminPass) {
+                sessionStorage.setItem("adminAuthorized", "true");
+                showPasswordPanel();
+            } else {
+                adminPasswordError.style.display = "block";
+                adminPassword.value = "";
+                adminPassword.focus();
+                
+                // Sécurité supplémentaire: limiter les tentatives
+                let attempts = parseInt(sessionStorage.getItem("adminLoginAttempts") || "0");
+                attempts++;
+                sessionStorage.setItem("adminLoginAttempts", attempts);
+                
+                // Bloquer temporairement après 5 tentatives
+                if (attempts >= 5) {
+                    adminPasswordError.textContent = "Trop de tentatives. Réessayez dans 5 minutes.";
+                    submitAdminPassword.disabled = true;
+                    adminPassword.disabled = true;
+                    
+                    setTimeout(() => {
+                        submitAdminPassword.disabled = false;
+                        adminPassword.disabled = false;
+                        adminPasswordError.textContent = "Incorrect admin password. Please try again.";
+                        sessionStorage.setItem("adminLoginAttempts", "0");
+                    }, 5 * 60 * 1000); // 5 minutes
+                }
+            }
+        }
+        
+        // Show password management panel
+        function showPasswordPanel() {
+            adminLoginLayer.style.display = "none";
+            passwordPanel.style.display = "flex";
+            loadPasswordsFromStorage();
+        }
+        
+        // Generate a random password
+        function generateRandomPassword() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            let password = "";
+            for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            newUserPassword.value = password;
+            showNotification("Random password generated!");
+        }
+        
+        // Add a new password
+        function addPassword() {
+            const password = newUserPassword.value.trim();
+            if (password === "") {
+                showNotification("Please enter a password", "error");
+                return;
+            }
+            
+            // Check if password already exists
+            if (passwordsArray.includes(password)) {
+                showNotification("This password already exists", "error");
+                return;
+            }
+            
+            // Add new password to array
+            passwordsArray.push(password);
+            
+            // Save passwords to localStorage
+            savePasswordsToStorage();
+            
+            // Reset input and update list
+            newUserPassword.value = "";
+            updatePasswordList();
+            showNotification("Password added successfully!");
+        }
+        
+        // Update the password list display
+        function updatePasswordList() {
+            passwordList.innerHTML = "";
+            
+            if (passwordsArray.length === 0) {
+                passwordList.innerHTML = "<p>No passwords added yet.</p>";
+                return;
+            }
+            
+            passwordsArray.forEach((password, index) => {
+                const passwordItem = document.createElement("div");
+                passwordItem.className = "password-item";
+                passwordItem.innerHTML = `
+                    <span>${password}</span>
+                    <div class="password-actions">
+                        <button class="copy-btn" data-password="${password}">Copy</button>
+                        <button class="delete-btn" data-index="${index}">Delete</button>
+                    </div>
+                `;
+                passwordList.appendChild(passwordItem);
+            });
+            
+            // Add click event for delete buttons
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    const index = parseInt(this.getAttribute("data-index"));
+                    deletePassword(index);
+                });
+            });
+            
+            // Add click event for copy buttons
+            document.querySelectorAll(".copy-btn").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    const password = this.getAttribute("data-password");
+                    copyToClipboard(password);
+                });
+            });
+        }
+        
+        // Delete a password
+        function deletePassword(index) {
+            passwordsArray.splice(index, 1);
+            
+            // Save updated passwords to localStorage
+            savePasswordsToStorage();
+            
+            updatePasswordList();
+            showNotification("Password deleted!");
+        }
+        
+        // Copy password to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification("Password copied to clipboard!");
+            }).catch(() => {
+                showNotification("Failed to copy password", "error");
+            });
+        }
+        
+        // Save passwords to localStorage using our password manager
+        function savePasswordsToStorage() {
+            const result = window.passwordManager.savePasswords(passwordsArray);
+            if (!result.success) {
+                showNotification("Error saving passwords: " + result.message, "error");
+            }
+        }
+        
+        // Load passwords from localStorage
+        function loadPasswordsFromStorage() {
+            try {
+                passwordsArray = window.passwordManager.getPasswords() || [];
+                updatePasswordList();
+                showNotification("Passwords loaded successfully");
+            } catch (error) {
+                console.error("Error loading passwords:", error);
+                passwordsArray = [];
+                updatePasswordList();
+                showNotification("No passwords found or error loading passwords", "error");
+            }
+        }
+        
+        // Logout
+        function logout() {
+            sessionStorage.removeItem("adminAuthorized");
+            adminLoginLayer.style.display = "flex";
+            passwordPanel.style.display = "none";
+            adminPassword.value = "";
+        }
+        
+        // Show notification
+        function showNotification(message, type = "success") {
+            notification.textContent = message;
+            notification.className = "notification";
+            if (type === "error") {
+                notification.classList.add("error");
+            }
+            notification.classList.add("show");
+            
+            setTimeout(() => {
+                notification.classList.remove("show");
+            }, 3000);
+        }
+        
+        // Anti-theft measures
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if (
+                e.keyCode === 123 || 
+                (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+                (e.ctrlKey && e.shiftKey && e.keyCode === 74) || 
+                (e.ctrlKey && e.keyCode === 85)
+            ) {
+                return false;
+            }
+        };
+        
+        // Download backup of passwords
+        function downloadPasswordsFile() {
+            const result = window.passwordManager.exportPasswords();
+            if (result.success) {
+                showNotification("Fichier de mots de passe téléchargé avec succès!");
+                document.getElementById("passwordFileInstructions").style.display = "block";
+            } else {
+                showNotification("Erreur lors de la création du fichier: " + result.message, "error");
+            }
+        }
+        
+        // Upload passwords from backup file
+        function uploadPasswordsFile(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const result = window.passwordManager.importPasswords(e.target.result);
+                if (result.success) {
+                    loadPasswordsFromStorage();
+                    showNotification("Mots de passe importés avec succès!");
+                } else {
+                    showNotification("Erreur lors de l'importation: " + result.message, "error");
+                }
+            };
+            reader.onerror = function() {
+                showNotification("Erreur lors de la lecture du fichier", "error");
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html> 
