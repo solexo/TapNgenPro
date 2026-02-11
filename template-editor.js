@@ -900,7 +900,7 @@ window.generateHTML = function(data) {
                 <div class="contact-info">
                     <div class="contact-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <a href="https://www.google.com/maps" target="_blank">
+                        <a href="https://www.google.com/maps/search/${encodeURIComponent(data.contactAddress)}" target="_blank">
                             ${escapedContactAddress}
                         </a>
                     </div>
@@ -948,7 +948,7 @@ window.generateHTML = function(data) {
         });
         
         // Function to download vCard directly from the template
-        function downloadVCard() {
+        window.downloadVCard = function() {
             try {
                 // Try parent method first (when in editor)
                 if (window.parent && window.parent.downloadVCardFromEditor) {
@@ -975,6 +975,18 @@ window.generateHTML = function(data) {
                 const logoImgElement = document.querySelector('.circle-image');
                 const logoData = logoImgElement && logoImgElement.src ? logoImgElement.src : '';
                 
+                // Function to fold base64 lines at 75 chars for vCard compatibility
+                function foldBase64(base64String, lineLength = 75) {
+                    let result = '';
+                    for (let i = 0; i < base64String.length; i += lineLength) {
+                        result += base64String.substr(i, lineLength);
+                        if (i + lineLength < base64String.length) {
+                            result += '\\r\\n '; // Line fold with space continuation
+                        }
+                    }
+                    return result;
+                }
+                
                 // vCard string with TEL formatted according to standards
                 let vCardData = "BEGIN:VCARD\\r\\n" +
                     "VERSION:3.0\\r\\n" +
@@ -992,23 +1004,22 @@ window.generateHTML = function(data) {
                         // Extract image type and data
                         const matches = logoData.match(/^data:image\\/([a-zA-Z]+);base64,(.+)$/);
                         if (matches && matches.length === 3) {
-                            const imageType = matches[1].toUpperCase();
                             const base64Data = matches[2];
                             
-                            // Always use JPEG format for better mobile compatibility
-                            vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:" + base64Data + "\\r\\n";
+                            // Fold base64 data properly for vCard compatibility (iPhone requirement)
+                            const foldedBase64 = foldBase64(base64Data);
+                            
+                            // Use correct vCard 3.0 format for iPhone compatibility
+                            vCardData += "PHOTO;ENCODING=BASE64;TYPE=JPEG:\\r\\n " + foldedBase64 + "\\r\\n";
                         } else {
-                            // Add placeholder for better compatibility
-                            vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBVU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAIAAgAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+t6KKKACiiigAooooAKKKKACiiigAooooA//2Q==\\r\\n";
+                            // Skip photo if format invalid
+                            console.log('Invalid image format for vCard');
                         }
                     } catch (e) {
-                        // Add placeholder if error
-                        vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBVU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAIAAgAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+t6KKKACiiigAooooAKKKKACiiigAooooA//2Q==\\r\\n";
+                        console.log('Error processing photo:', e);
+                        // Skip photo on error instead of adding broken placeholder
                     }
-                } else {
-                    // Add photo placeholder for better compatibility with mobile contacts apps
-                    vCardData += "PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBVU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAIAAgAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+t6KKKACiiigAooooAKKKKACiiigAooooA//2Q==\\r\\n";
-                    }
+                }
                     
                     vCardData += "END:VCARD";
                     
@@ -1039,7 +1050,7 @@ window.generateHTML = function(data) {
                 console.error('vCard download error:', e);
                 alert('Could not download contact. Please try again or contact the site owner.');
             }
-        }
+        };
     </script>
 </body>
 </html>`;
