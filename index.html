@@ -1588,7 +1588,7 @@
             const saveBtn = document.getElementById('save-btn');
             saveBtn.addEventListener('click', saveEditorState);
             // Load state on page load
-            window.addEventListener('DOMContentLoaded', loadEditorState);
+            loadEditorState();
 
             // Add file import functionality
             document.getElementById('import-html').addEventListener('change', function(e) {
